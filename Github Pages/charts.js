@@ -22,7 +22,7 @@ init();
   function optionChanged(newSample) {
     buildMetadata(newSample);
     buildCharts(newSample);
-  }
+  
 // Demographics Panel 
   function buildMetadata(sample) {
     d3.json("samples.json").then((data) => {
@@ -30,6 +30,7 @@ init();
       // Filter the data for the object with the desired sample number
       var resultArray = metadata.filter(sampleObj => sampleObj.id == sample);
       var filterMetadata = resultArray[0];
+      
       // Use d3 to select the panel with id of `#sample-metadata`
       var PANEL = d3.select("#sample-metadata");
 
@@ -44,14 +45,16 @@ init();
     });
   });
 }
-
+ }
 // 1. Create the buildCharts function.
 function buildCharts(sample) {
   // 2. Use d3.json to load and retrieve the samples.json file 
   d3.json("samples.json").then((data) => {
     // 3. Create a variable that holds the samples array. 
     var samples = data.samples;
-  
+    var metadata = data.metadata
+    var resultArray = metadata.filter(sampleObj => sampleObj.id == sample);
+    var filterMetadata = resultArray[0];
     // 4. Create a variable that filters the samples for the object with the desired sample number.
     var filteredSample = samples.filter(samplesObj => samplesObj.id == sample)[0];
     console.log(sample);
@@ -92,5 +95,68 @@ function buildCharts(sample) {
     };
     // 10. Use Plotly to plot the data with the layout. 
     Plotly.newPlot('bar', barData, barLayout);
-  });
-};
+
+      // Bar and Bubble charts
+    // 1. Create the trace for the bubble chart.
+    var bubbleData =[{
+      x: xticks,
+      y: yticks,
+      type: 'bubble',
+      text: otu_labels,
+      mode: 'markers',
+      marker: {
+        size: sample_values,
+        color: otu_ids,
+        colorscale:'Y1GnBu',
+      }
+    }]; 
+
+    
+    
+
+    // 2. Create the layout for the bubble chart.
+    var bubbleLayout = {
+      title:'Bacteria Cultures Per Sample',
+      xaxis: {title: "OTU IDs"},
+      yaxis: {title: "Sample Values"},
+      showlegend: false,
+    };
+
+    // 3. Use Plotly to plot the data with the layout.
+    Plotly.newPlot('bubble', bubbleData, bubbleLayout);
+
+    //GAUGE Chart
+    // 3. Create a variable that holds the washing frequency.
+   var wfreq = filterMetadata.wfreq
+    
+    // 4. Create the trace for the gauge chart.
+    var gaugeData = [
+      {
+        domain: { x: [0, 1], y: [0, 1] },
+        value: wfreq, 
+        title: {text:"Belly Button Washing Frequency"},
+        type: "indicator",
+        colorscale: "Earth",
+        mode: "gauge+number",
+        gauge: {
+          bar: {color: 'white'},
+          axis: {range: [null,9]},
+          steps:[
+            {range: [0,2], color: '#f8b195'},
+            {range: [2,4], color: '#f67280'},
+            {range: [4,6], color:'#c06c84'},
+            {range: [6,8], color: '#6c5b7b'},
+            {range: [8,10], color:'#355c7d'},
+          ]
+        }
+      }
+    ];
+     
+    
+    // 5. Create the layout for the gauge chart.
+    var gaugeLayout = {width: 500, height: 400, margin: { t:0, b:0}};
+
+    // 6. Use Plotly to plot the gauge data and layout.
+    Plotly.newPlot('gauge', gaugeData, gaugeLayout);
+  })};
+ 
